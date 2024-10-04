@@ -1,5 +1,7 @@
 import './App.css';
-import {ApolloClient,InMemoryCache,ApolloProvider,useQuery,gql} from "@apollo/client";
+import {ApolloClient,InMemoryCache,ApolloProvider,useQuery,gql,useLazyQuery} from "@apollo/client";
+// import {Button} from "react-bootstrap";
+import {useState} from "react";
 function App() {
 
   const client = new ApolloClient({
@@ -25,18 +27,42 @@ const GET_ALL_USERS = gql`
       email
       age
       Nationality
-      }
+    }
   }
 `
+const GET_ALL_MOVIES = gql`
+  query{
+    movies{
+      name
+      yearOfPublication
+      isInTheaters
+    }
+  }
+`
+const GET_SPECIFIC_MOVIE = gql`
+  query Movie($name: String!){
+    getspecificmovie(name: $name){
+      name
+      yearOfPublication
+      isInTheaters
+    }
+  }
+`
+
 function DisplayData(){
   const {data,loading} = useQuery(GET_ALL_USERS);
+  const {data:movieData,loading:movieLoading} = useQuery(GET_ALL_MOVIES);
+  const [movieSearched,setMovieSearched] = useState("");
+  const [fetchSpecificMovie,{data:SearchedData,error}] = useLazyQuery(GET_SPECIFIC_MOVIE);
+
   if(loading){
     return(
       <div>DATA IS GETTING FETCHED</div>
     )
   }
   return (
-    <div>
+    <>
+      <div>
       {data && data.users.map((user)=>{
         return(
           <div>
@@ -49,6 +75,42 @@ function DisplayData(){
         )
       })}
     </div>
+    <div>
+      <div>
+        <h1>List Of Movies</h1>
+      </div>
+      {movieData && movieData.movies.map((movie)=>{
+        return(
+          <div>
+            <h1>Name: {movie.name}</h1>
+            <h1>Year Of Publication: {movie.yearOfPublication}</h1>
+            <h1>Is In Theaters: {movie.isInTheaters}</h1>
+          </div>
+        )
+      })}
+    </div>
+    <div>
+      <input type = "text" placeholder = "Enter Name" onChange={(e)=>{
+        setMovieSearched(e.target.value);
+      }}>
+      </input>
+      <button onClick={()=>{
+        fetchSpecificMovie({
+          variables:{
+            name:movieSearched
+          }
+        })
+      }}>Fetch Data</button>
+      <div>
+        {SearchedData &&
+          <div>
+            <h1>Name: {SearchedData.getspecificmovie.name}</h1>
+            <h1>Year Of Publication: {SearchedData.getspecificmovie.yearOfPublication}</h1>
+          </div>
+        }
+      </div>
+    </div>
+    </>
   )
 }
 export default App;
