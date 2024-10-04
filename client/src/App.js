@@ -1,5 +1,6 @@
 import './App.css';
-import {ApolloClient,InMemoryCache,ApolloProvider,useQuery,gql,useLazyQuery} from "@apollo/client";
+import {ApolloClient,InMemoryCache,ApolloProvider,useQuery,gql,useLazyQuery,useMutation} from "@apollo/client";
+import { set } from 'lodash';
 // import {Button} from "react-bootstrap";
 import {useState} from "react";
 function App() {
@@ -48,12 +49,29 @@ const GET_SPECIFIC_MOVIE = gql`
     }
   }
 `
+const CREATE_USER = gql`
+  mutation CreateUser($input: CreateUserInput!){
+    createUser(input: $input){
+      id
+      name
+      email
+      age
+      Nationality
+    }
+  }
+`
 
 function DisplayData(){
   const {data,loading} = useQuery(GET_ALL_USERS);
   const {data:movieData,loading:movieLoading} = useQuery(GET_ALL_MOVIES);
   const [movieSearched,setMovieSearched] = useState("");
+  const [name,setName] = useState("");
+  const [email,setEmail] = useState("");
+  const [age,setAge] = useState(0);
+  const [Nationality,setNationality] = useState("");
+
   const [fetchSpecificMovie,{data:SearchedData,error}] = useLazyQuery(GET_SPECIFIC_MOVIE);
+  const[createuser,{data:createdUser,error:createdUserError}] = useMutation(CREATE_USER);
 
   if(loading){
     return(
@@ -63,6 +81,44 @@ function DisplayData(){
   return (
     <>
       <div>
+        <div>
+          <input type = "text" placeholder='name' onChange={(event)=>{
+            setName(event.target.value);
+          }}></input>
+          <input type = "text" placeholder='email' onChange={(event)=>{
+            setEmail(event.target.value);
+          }}></input>
+          <input type = "number" placeholder='age' onChange={(event)=>{
+            setAge(event.target.value);
+          }}></input>
+          <input type = "text" placeholder='Nationality' onChange={(event)=>{
+            setNationality(event.target.value.toUpperCase());
+          }}></input>
+        <button onClick={()=>{
+          createuser({
+            variables:{
+              input:{
+                name,
+                email,
+                age:Number(age),
+                Nationality
+              }
+            }
+          })
+        }}>Create User</button>
+        </div>
+        {createdUser && (
+            <div>
+              <h1>New User Created:</h1>
+              <h1>Name: {createdUser.createUser.name}</h1>
+              <h1>ID: {createdUser.createUser.id}</h1>
+              <h1>Email: {createdUser.createUser.email}</h1>
+              <h1>Age: {createdUser.createUser.age}</h1>
+              <h1>Nationality: {createdUser.createUser.Nationality}</h1>
+            </div>
+          )}
+        </div>
+        <div>
       {data && data.users.map((user)=>{
         return(
           <div>
