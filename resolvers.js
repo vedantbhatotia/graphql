@@ -1,12 +1,16 @@
 const { UserList,MovieList} = require('./data');
 const _ = require('lodash');
 
+// context stores the global information about the request and response that is accessible to all the resolvers.
+
 const resolvers = {
     Query: {
-        users: () => {
+        users: (parent,args,context,info) => {
+            console.log(context);
+            // console.log(parent);
             return UserList;
         },
-        getspecificuser: (parent, args) => {
+        getspecificuser: (parent, args,context,info) => {
             const id = args.id;
             const result = _.find(UserList,{id:Number(id)});
             return result;
@@ -21,7 +25,8 @@ const resolvers = {
         }
     },
     User:{
-        favoriteMovies:()=>{
+        favoriteMovies:(parent)=>{
+            // console.log(parent);
             return _.filter(MovieList,{isInTheaters:true})
         }
     },
